@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortimanager-deployment
+  namespace: fortimanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fortimanager
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: fortimanager  
+    spec:
+      containers:
+        - name: fortimanager
+          image: fortinet/fortimanager
+          securityContext:
+            capabilities:
+              add:
+                - ALL
+          readinessProbe:
+            tcpSocket:
+              port: 443
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+           - name: var-fmg
+             mountPath: /var
+           - name: data-fmg
+             mountPath: /data
+      volumes:
+      - name: var-fmg
+        persistentVolumeClaim:
+         claimName: fmgvar
+      - name: data-fmg
+        persistentVolumeClaim:
+         claimName: fmgdata
